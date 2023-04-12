@@ -2,5 +2,6 @@
 
 # SpomixAPI
 
-flask --app app run --debug
 . ./env.sh
+flask --app app run --debug
+

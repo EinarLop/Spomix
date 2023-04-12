@@ -49,14 +49,30 @@ def get_me():
 def get_me_artists():
     headers = {'Authorization': "Bearer " + access_token}
     r = requests.get('https://api.spotify.com/v1/me/top/artists', headers=headers)
-    print(r)
-    return r.text
+    rj = r.json()
+    items_arr = []
+    items = rj.get('items')
+    for item in items:
+        curr = {}
+        curr['name'] = item.get('name')
+        curr['genres'] = item.get('genres')
+        curr['id'] = item.get('id')
+        items_arr.append(curr)
+    return items_arr
 
 
 @app.route("/me/tracks")
 def get_me_tracks():
     headers = {'Authorization': "Bearer " + access_token}
     r = requests.get('https://api.spotify.com/v1/me/top/tracks', headers=headers)
-    print(r)
-    return r.text
+    rj = r.json()
+    items_arr = []
+    items = rj.get('items')
+    print("Itemsssss", items)
+    for item in items:
+        curr = {}
+        curr['name'] = item.get('name')
+        curr['id'] = item.get('id')
+        items_arr.append(curr)
+    return items_arr
 
