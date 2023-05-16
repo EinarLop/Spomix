@@ -2,6 +2,7 @@ import os
 import base64
 from flask import Flask, redirect, request
 import requests
+from flask_cors import CORS
 
 import firebasefunctions
 import helperfunctions
@@ -9,6 +10,9 @@ from firebaseconfig import *
 from firebasefunctions import *
 
 app = Flask(__name__)
+cors = CORS(app)
+
+
 
 access_token = ""
 refresh_token = ""
@@ -49,9 +53,12 @@ def get_callback():
 
     user_id = helperfunctions.get_me(current_access_token)
 
+    print("AT", current_access_token)
+    print("UI", user_id)
     firebasefunctions.set_user(user_id, current_refresh_token)
+                               
+    return redirect(f'http://localhost:3000/home?UI={user_id}&AT={current_access_token}')
 
-    return current_access_token, user_id
 
 
 @app.route("/refresh")
@@ -69,15 +76,6 @@ def refresh():
     return "Refreshed Token"
 
 
-@app.route("/me")
-def get_me(current_access_token):
-    headers = {'Authorization': "Bearer " + current_access_token}
-    r = requests.get('https://api.spotify.com/v1/me', headers=headers)
-    rj = r.json()
-    user_id = rj.get('id')
-    return user_id
-
-
 @app.route("/me/artists")
 def get_me_artists():
     current_access_token = request.headers.get('AT')
@@ -86,11 +84,14 @@ def get_me_artists():
     rj = r.json()
     items_arr = []
     items = rj.get('items')
-    for item in items:
-        curr = {'name': item.get('name'), 'img': item.get('images')[1].get('url'), 'genres': item.get('genres'),
-                'id': item.get('id')}
-        items_arr.append(curr)
-    return items_arr
+    if items:
+        for item in items:
+            curr = {'name': item.get('name'), 'img': item.get('images')[1].get('url'), 'genres': item.get('genres'),
+                    'id': item.get('id')}
+            items_arr.append(curr)
+        return items_arr
+    else:
+        return r.text
 
 
 @app.route("/me/tracks")
@@ -125,3 +126,34 @@ def get_me_recommendations():
                 'img': item.get('album').get('images')[1].get('url'), 'id': item.get('id')}
         items_arr.append(curr)
     return items_arr
+
+
+@app.route("/groups/create")
+def create_group():
+    group_name = request.args.get('name')
+    current_user_id = request.headers.get('UI')
+    firebasefunctions.create_group(group_name, current_user_id)
+    return "created"
+
+
+@app.route("/groups/join")
+def join_group():
+    group_id = request.args.get('id')
+    # current_user_id = request.headers.get('UI')
+    current_user_id = "123453433434343"
+    firebasefunctions.join_group(group_id, current_user_id)
+    return "join"
+
+
+@app.route("/groups/genres")
+def get_genres():
+    group_id = request.args.get('id')
+    
+
+
+@app.route("/test")
+def test():
+    return "HET"
+
+
+

@@ -1,12 +1,25 @@
 from firebaseconfig import *
 
 
-def create_group():
+def create_group(group_name, user_id):
     doc_ref = db.collection(u'groups')
-    doc_ref.add({
-        u'creator': u'Ada',
-        u'members': u'Lovelace',
+    response = doc_ref.add({
+        u'name': group_name,
+        u'members': [user_id],
     })
+    print("Group Id",response[1].id)
+
+
+def join_group(group_id, user_id):
+    doc_ref = db.collection(u'groups').document(group_id)
+    response = doc_ref.update({
+        u'members': firestore.ArrayUnion([user_id])
+    })
+    print(response)
+
+
+
+
 
 
 def set_user(user_id: str,  refresh_token: str):
