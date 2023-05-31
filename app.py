@@ -1,6 +1,6 @@
 import os
 import base64
-from flask import Flask, redirect, request
+from flask import Flask, redirect, request, jsonify
 import requests
 from flask_cors import CORS
 
@@ -8,6 +8,7 @@ import firebasefunctions
 import helperfunctions
 from firebaseconfig import *
 from firebasefunctions import *
+import random
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -46,7 +47,13 @@ def get_callback():
                'Authorization': "Basic " + base64.b64encode(message.encode("utf-8")).decode("utf-8")}
 
     r = requests.post('https://accounts.spotify.com/api/token', data=payload, headers=headers)
+    print("Callback",r.text)
+
+    print("-------- Before Json -------- ", r)
     rj = r.json()
+
+    print("-------- After Json --------", rj)
+
 
     current_access_token = rj["access_token"]
     current_refresh_token = rj["refresh_token"]
@@ -79,35 +86,47 @@ def refresh():
 @app.route("/me/artists")
 def get_me_artists():
     current_access_token = request.headers.get('AT')
+    current_user_id = request.headers.get('UI')
     headers = {'Authorization': "Bearer " + current_access_token}
     r = requests.get('https://api.spotify.com/v1/me/top/artists', headers=headers)
     rj = r.json()
     items_arr = []
+    artists = []
+    genres = []
     items = rj.get('items')
     if items:
         for item in items:
             curr = {'name': item.get('name'), 'img': item.get('images')[1].get('url'), 'genres': item.get('genres'),
                     'id': item.get('id')}
             items_arr.append(curr)
+            artists.append(item.get('id'))
+            genres.append(item.get('genres')[0])
+        firebasefunctions.update_user_artists(current_user_id, artists[:5], genres[:5])
         return items_arr
-    else:
-        return r.text
+
+    return r.text
 
 
 @app.route("/me/tracks")
 def get_me_tracks():
     current_access_token = request.headers.get('AT')
+    current_user_id = request.headers.get('UI')
     headers = {'Authorization': "Bearer " + current_access_token}
     r = requests.get('https://api.spotify.com/v1/me/top/tracks', headers=headers)
     rj = r.json()
     items_arr = []
+    tracks = []
     items = rj.get('items')
-    for item in items:
-        curr = {'artist': item.get('artists')[0].get('name'), 'name': item.get('name'),
-                'img': item.get('album').get('images')[1].get('url'), 'id': item.get('id')}
-        # Second Image 300x300
-        items_arr.append(curr)
-    return items_arr
+    if items:
+        for item in items:
+            curr = {'artist': item.get('artists')[0].get('name'), 'name': item.get('name'),
+                    'img': item.get('album').get('images')[1].get('url'), 'id': item.get('id')}
+            # Second Image 300x300
+            items_arr.append(curr)
+            tracks.append(item.get('id'))
+        firebasefunctions.update_user_tracks(current_user_id, tracks[:5])
+        return items_arr
+    return r.text
 
 
 @app.route("/me/recommendations")
@@ -130,24 +149,61 @@ def get_me_recommendations():
 
 @app.route("/groups/create")
 def create_group():
-    group_name = request.args.get('name')
+    adjectives = ["sweet", "bitter", "delicious", "pretty", "beautiful"]
+    fruits = ["apple, orange, pineapple", "strawberry", "grape"]
+    group_name = f'{random.choice(adjectives)} {random.choice(fruits)}'
     current_user_id = request.headers.get('UI')
-    firebasefunctions.create_group(group_name, current_user_id)
-    return "created"
+    group_id =  firebasefunctions.create_group(group_name, current_user_id)
+    return jsonify(
+        groupId= group_id,
+        message = f'Group {group_id} created successfully',
+        status= 200)
 
 
 @app.route("/groups/join")
 def join_group():
     group_id = request.args.get('id')
-    # current_user_id = request.headers.get('UI')
-    current_user_id = "123453433434343"
-    firebasefunctions.join_group(group_id, current_user_id)
-    return "join"
+    current_user_id = request.headers.get('UI')
+    status = firebasefunctions.join_group(group_id, current_user_id)
+    if status:
+        return jsonify(
+        groupId= group_id,
+        message = f'Joined group {group_id} successfully',
+        status= 200
+        )
+    return jsonify (
+            message = f'Error: Could not join group {group_id}',
+            status= 400
+            )
 
 
-@app.route("/groups/genres")
-def get_genres():
+
+@app.route("/groups/recommendations")
+def get_recommendations():
     group_id = request.args.get('id')
+    group_genre = request.args.get('genre')
+    current_access_token = request.headers.get('AT')
+    group_tracks, group_artists, group_genres = firebasefunctions.get_group_seeds(group_id)
+
+    headers = {'Authorization': "Bearer " + current_access_token}
+    params = {'seed_artists': f'{random.choice(group_artists)},{random.choice(group_artists)}', 'seed_genres': group_genre,
+              'seed_tracks': f'{random.choice(group_tracks)},{random.choice(group_tracks)}' }
+    r = requests.get('https://api.spotify.com/v1/recommendations', headers=headers, params=params)
+    rj = r.json()
+    items_arr = []
+    items = rj.get('tracks')
+    for item in items:
+        # Second Image 300x300
+        curr = {'artist': item.get('artists')[0].get('name'), 'name': item.get('name'),
+                'img': item.get('album').get('images')[1].get('url'), 'id': item.get('id')}
+        items_arr.append(curr)
+    return items_arr
+  
+
+
+
+
+
     
 
 
