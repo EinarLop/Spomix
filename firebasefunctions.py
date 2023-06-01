@@ -1,5 +1,5 @@
 from firebaseconfig import *
-
+import helperfunctions 
 
 def create_group(group_name, user_id):
     doc_ref = db.collection(u'groups')
@@ -88,6 +88,21 @@ def get_group_seeds(group_id):
         return None
 
 
-  
+def get_group(group_id, access_token):
+    doc_ref = db.collection(u'groups').document(group_id)
+    
+    doc_snapshot = doc_ref.get()
+    if doc_snapshot.exists: 
+         doc_data = doc_snapshot.to_dict()
+         members = doc_data.get("members")
+         profiles = []
+         if members:
+             for member in members:
+                current_member = helperfunctions.get_me_full(access_token, member)
+                if current_member:
+                    profiles.append(current_member)
+         doc_data["profiles"] = profiles
+         return doc_data
+    return None
 
 

@@ -1,6 +1,6 @@
 import os
 import base64
-from flask import Flask, redirect, request, jsonify
+from flask import Flask, redirect, request, jsonify, Response
 import requests
 from flask_cors import CORS
 
@@ -103,8 +103,9 @@ def get_me_artists():
             genres.append(item.get('genres')[0])
         firebasefunctions.update_user_artists(current_user_id, artists[:5], genres[:5])
         return items_arr
-
-    return r.text
+    return Response(
+        f'Could not get artists from user {current_user_id}',
+        status= 400)
 
 
 @app.route("/me/tracks")
@@ -126,7 +127,9 @@ def get_me_tracks():
             tracks.append(item.get('id'))
         firebasefunctions.update_user_tracks(current_user_id, tracks[:5])
         return items_arr
-    return r.text
+    return Response(
+        f'Could not get tracks from user {current_user_id}',
+        status= 400)
 
 
 @app.route("/me/recommendations")
@@ -149,14 +152,13 @@ def get_me_recommendations():
 
 @app.route("/groups/create")
 def create_group():
-    adjectives = ["sweet", "bitter", "delicious", "pretty", "beautiful"]
-    fruits = ["apple, orange, pineapple", "strawberry", "grape"]
+    adjectives = ["sweet 🥹", "bitter 😑", "delicious 🤤", "pretty 😚", "beautiful 😘"]
+    fruits = ["apple 🍎", "orange 🍊", "pineapple 🍍", "strawberry 🍓", "grape 🍇"]
     group_name = f'{random.choice(adjectives)} {random.choice(fruits)}'
     current_user_id = request.headers.get('UI')
     group_id =  firebasefunctions.create_group(group_name, current_user_id)
-    return jsonify(
-        groupId= group_id,
-        message = f'Group {group_id} created successfully',
+    return Response(
+        group_id,
         status= 200)
 
 
@@ -201,7 +203,16 @@ def get_recommendations():
   
 
 
-
+@app.route("/groups/group")
+def get_group():
+    group_id = request.args.get('id')
+    current_access_token = request.headers.get('AT')
+    response = firebasefunctions.get_group(group_id, current_access_token)
+    if response:
+        return response
+    return Response(
+        f'Could not get group {group_id}',
+        status= 400)
 
 
     
