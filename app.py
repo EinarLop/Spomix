@@ -47,12 +47,10 @@ def get_callback():
                'Authorization': "Basic " + base64.b64encode(message.encode("utf-8")).decode("utf-8")}
 
     r = requests.post('https://accounts.spotify.com/api/token', data=payload, headers=headers)
-    print("Callback",r.text)
 
-    print("-------- Before Json -------- ", r)
     rj = r.json()
 
-    print("-------- After Json --------", rj)
+
 
 
     current_access_token = rj["access_token"]
@@ -101,7 +99,12 @@ def get_me_artists():
             items_arr.append(curr)
             artists.append(item.get('id'))
             genres.append(item.get('genres')[0])
-        firebasefunctions.update_user_artists(current_user_id, artists[:5], genres[:5])
+        print(current_user_id, "app ui")
+        response = firebasefunctions.update_user_artists(current_user_id, artists[:5], genres[:5])
+        if response:
+            print("Artists updated successfully")
+        else:
+            print("Error on update")
         return items_arr
     return Response(
         f'Could not get artists from user {current_user_id}',
@@ -185,8 +188,7 @@ def get_recommendations():
     group_id = request.args.get('id')
     group_genre = request.args.get('genre')
     current_access_token = request.headers.get('AT')
-    group_tracks, group_artists, group_genres = firebasefunctions.get_group_seeds(group_id)
-
+    group_tracks, group_artists, _ = firebasefunctions.get_group_seeds(group_id)
     headers = {'Authorization': "Bearer " + current_access_token}
     params = {'seed_artists': f'{random.choice(group_artists)},{random.choice(group_artists)}', 'seed_genres': group_genre,
               'seed_tracks': f'{random.choice(group_tracks)},{random.choice(group_tracks)}' }
@@ -195,10 +197,13 @@ def get_recommendations():
     items_arr = []
     items = rj.get('tracks')
     for item in items:
-        # Second Image 300x300
         curr = {'artist': item.get('artists')[0].get('name'), 'name': item.get('name'),
                 'img': item.get('album').get('images')[1].get('url'), 'id': item.get('id')}
         items_arr.append(curr)
+    response = firebasefunctions.update_group_playlist(group_id, items_arr)
+    if not response:
+        print("Playlist not updated")
+    else: print("Playlist updated")
     return items_arr
   
 
@@ -215,7 +220,17 @@ def get_group():
         status= 400)
 
 
-    
+@app.route("/groups/mine")
+def get_my_groups():
+    current_user_id = request.headers.get('UI')
+    current_access_token  = request.headers.get('AT')
+
+    response = firebasefunctions.get_my_groups(current_user_id, current_access_token)
+    if response:
+        return response
+    return Response(
+        f'Could not get groups form user {current_user_id}',
+        status= 400)
 
 
 @app.route("/test")
