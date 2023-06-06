@@ -1,5 +1,6 @@
 env.sh
-venv
+.venv
 .idea
 __pycache__
 firebasecredentials.json
+env.txt
