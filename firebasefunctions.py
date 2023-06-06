@@ -135,7 +135,14 @@ def get_my_groups(user_id, access_token ):
         return groups
     return None 
         
-        
+def get_group_playlist(group_id):
+    doc_ref = db.collection(u'groups').document(group_id)
+    doc_snapshot = doc_ref.get()
+    if doc_snapshot.exists: 
+         doc_data = doc_snapshot.to_dict()
+         return doc_data.get("playlist")
+    return None
+
  
 
 
