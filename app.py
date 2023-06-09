@@ -266,4 +266,8 @@ def test():
     return "HET"
 
 
+if __name__ == "__main__":
+    app = app
+    app.run()
+
 

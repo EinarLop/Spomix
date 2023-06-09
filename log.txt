@@ -1,0 +1,6 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+On macOS, try disabling the 'Ai127.0.0.1 - - [09/Jun/2023 16:23:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jun/2023 16:23:20] "GET /favicon.ico HTTP/1.1" 404 -
