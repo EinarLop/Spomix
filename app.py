@@ -59,7 +59,7 @@ def get_callback():
 
     user_id = helperfunctions.get_me(current_access_token)
 
-    print("AT", current_access_token)
+    print("AT", current_access_token) 
     print("UI", user_id)
     firebasefunctions.set_user(user_id, current_refresh_token)
                                
