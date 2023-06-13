@@ -63,7 +63,7 @@ def get_callback():
     print("UI", user_id)
     firebasefunctions.set_user(user_id, current_refresh_token)
                                
-    return redirect(f'http://localhost:3000/home?UI={user_id}&AT={current_access_token}')
+    return redirect(f'{os.environ.get("uri")}/home?UI={user_id}&AT={current_access_token}')
 
 
 
