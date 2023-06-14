@@ -97,15 +97,15 @@ def get_me_artists():
         for item in items:
             curr = {'name': item.get('name'), 'img': item.get('images')[1].get('url'), 'genres': item.get('genres'),
                     'id': item.get('id')}
-          
+    
             if curr.get('genres') is None or len(curr.get('genres')) == 0:
                 curr['genres'] = ['pop']
             if curr.get('id') is None:
                 curr['id' ] = '06HL4z0CvFAxyc27GXpf02'
             if curr['name'] != 'Gibi ASMR':
                 items_arr.append(curr)
-                artists.append(item.get('id'))
-                genres.append(item.get('genres')[0])
+                artists.append(curr.get('id'))
+                genres.append(curr.get('genres')[0])
         print(current_user_id, "app ui")
         response = firebasefunctions.update_user_artists(current_user_id, artists[:5], genres[:5])
         if response:
@@ -135,7 +135,7 @@ def get_me_tracks():
             # Second Image 300x300
             if curr['artist'] != 'Gibi ASMR':
                 items_arr.append(curr)
-                tracks.append(item.get('id'))
+                tracks.append(curr.get('id'))
         firebasefunctions.update_user_tracks(current_user_id, tracks[:5])
         return items_arr
     return Response(
