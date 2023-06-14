@@ -98,7 +98,7 @@ def get_me_artists():
             curr = {'name': item.get('name'), 'img': item.get('images')[1].get('url'), 'genres': item.get('genres'),
                     'id': item.get('id')}
           
-            if curr.get('genres') is None:
+            if curr.get('genres') is None or len(curr.get('genres')) == 0:
                 curr['genres'] = ['pop']
             if curr.get('id') is None:
                 curr['id' ] = '06HL4z0CvFAxyc27GXpf02'
