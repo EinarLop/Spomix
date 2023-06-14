@@ -68,7 +68,7 @@ def get_callback():
 
 
 @app.route("/refresh")
-def refresh():
+def refresh(): 
     message = f'{os.environ.get("client_id")}:{os.environ.get("client_secret")}'
     headers = {'Content-Type': 'application/x-www-form-urlencoded',
                'Authorization': "Basic " + base64.b64encode(message.encode("utf-8")).decode("utf-8")}
@@ -97,9 +97,15 @@ def get_me_artists():
         for item in items:
             curr = {'name': item.get('name'), 'img': item.get('images')[1].get('url'), 'genres': item.get('genres'),
                     'id': item.get('id')}
-            items_arr.append(curr)
-            artists.append(item.get('id'))
-            genres.append(item.get('genres')[0])
+          
+            if curr.get('genres') is None:
+                curr['genres'] = ['pop']
+            if curr.get('id') is None:
+                curr['id' ] = '06HL4z0CvFAxyc27GXpf02'
+            if curr['name'] != 'Gibi ASMR':
+                items_arr.append(curr)
+                artists.append(item.get('id'))
+                genres.append(item.get('genres')[0])
         print(current_user_id, "app ui")
         response = firebasefunctions.update_user_artists(current_user_id, artists[:5], genres[:5])
         if response:
@@ -127,8 +133,9 @@ def get_me_tracks():
             curr = {'artist': item.get('artists')[0].get('name'), 'name': item.get('name'),
                     'img': item.get('album').get('images')[1].get('url'), 'id': item.get('id')}
             # Second Image 300x300
-            items_arr.append(curr)
-            tracks.append(item.get('id'))
+            if curr['artist'] != 'Gibi ASMR':
+                items_arr.append(curr)
+                tracks.append(item.get('id'))
         firebasefunctions.update_user_tracks(current_user_id, tracks[:5])
         return items_arr
     return Response(
@@ -172,13 +179,12 @@ def join_group():
     current_user_id = request.headers.get('UI')
     status = firebasefunctions.join_group(group_id, current_user_id)
     if status:
-        return jsonify(
-        groupId= group_id,
-        message = f'Joined group {group_id} successfully',
+        return Response(
+        f'Joined group {group_id} successfully',
         status= 200
         )
-    return jsonify (
-            message = f'Error: Could not join group {group_id}',
+    return Response (
+            f'Error: Could not join group {group_id}',
             status= 400
             )
 

@@ -5,8 +5,9 @@
 pip install --upgrade firebase-admin
 . ./env.sh
 flask --app app run --debug
-gunicorn app:app
+gunicorn app:app  
 turn off air play receiver
+kill -9 $(lsof -ti:8081)
 
 Detalles
 
